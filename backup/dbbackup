@@ -1,0 +1,50 @@
+#!/bin/bash
+
+DB_NAME="serpent_surge_db"
+TABLE_NAME="score"
+BACKUP_DIR="/var/backups/dbbackup"
+LOG_FILE="/var/log/dbbackup.log"
+MAX_ARCHIVES=3
+
+log() {
+ echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | sudo tee -a $LOG_FILE
+}
+
+DB_NAME=$1
+TABLE_NAME=$2
+
+if [[ -z "DB_NAME" || -z "$TABLE_NAME" ]]; then
+  log "ERROR: Database or table not found."
+  exit 1
+fi
+
+log "Starting backup for Serpent Surge."
+
+sudo mkdir -p $BACKUP_DIR/daily
+DUMP_FILE="$BACKUP_DIR/daily/${TABLE_NAME}-$(date +%F).sql"
+sudo mysqldump "$DB_NAME" "$TABLE_NAME" > "$DUMP_FILE"
+
+if [[ $? -ne 0 ]]; then
+  log "ERROR: Mysqldump failed"
+  exit 1
+fi
+log "Backup is successful: $DUMP_FILE"
+
+DAY=$(date +%-d)
+if (( (DAY - 1) % 3 == 0 )); then
+  log "Creating archive."
+  ARCHIVE_FILE="$BACKUP_DIR/archive-$(date +%F).tar.gz"
+  sudo tar -czf "$ARCHIVE_FILE" -C "$BACKUP_DIR/daily"
+  sudo rm -f $BACKUP_DIR/daily/*
+  log "Archive created, daily files are deleted."
+
+  log "Cleaning up old archives."
+  cd $BACKUP_DIR
+  ARCHIVE_COUNT=$(ls -1q archive-*.tar.gz | wc -l)
+  if [[ $ARCHIVE_COUNT -gt $MAX_ARCHIVES ]]; then
+    ls -t archive-*.tar.gz | tail -n +$(($MAX_ARCHIVES + 1)) | xargs sudo rm -f
+    log "Old archives removed."
+  fi
+fi
+
+log "DONE!"
