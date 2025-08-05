@@ -1,0 +1,71 @@
+# Corrected Variable file that aligns with the main.tf script
+
+variable "vpc_cidr" {
+  description = "The CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_cidr" {
+  description = "The CIDR block for the public subnet"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "private_subnet_cidr" {
+  description = "The CIDR block for the private subnet"
+  type        = string
+  default     = "10.0.2.0/24"
+}
+
+variable "everything_through_cidr" {
+  description = "A CIDR block representing all IP addresses"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+variable "sg_ingress_ports" {
+  description = "A list of ports to open for inbound traffic on the EC2 security group"
+  type        = list(number)
+  default     = [80, 443, 22]
+}
+
+variable "ec2_ami" {
+  description = "The AMI ID for the EC2 instance"
+  type        = string
+  default     = "ami-084568db4383264d4"
+}
+
+variable "ec2_type" {
+  description = "The instance type for the EC2 instance"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "ssh_key_name" {
+  description = "The name of the SSH key pair"
+  type        = string
+  default     = "final_pem"
+}
+
+variable "ssh_public_key" {
+  description = "The SSH public key content"
+  type        = string
+}
+
+variable "mysql_db_user" {
+  description = "The username for the MySQL RDS instance"
+  type        = string
+  default     = "admin"
+}
+
+variable "mysql_db_password" {
+  description = "The password for the MySQL RDS instance"
+  type        = string
+}
+
+variable "rds_instance_type" {
+  description = "The instance type for the RDS database"
+  type        = string
+  default     = "db.t3.micro"
+}
