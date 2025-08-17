@@ -4,6 +4,7 @@ name: Docker Image CI
 # Controls when the workflow will run
 on:
   push:
+  workflow_dispatch:
     # Run only when a new tag is pushed (e.g., v1.0.0, v1.2.3)
     tags:
       - 'v*.*.*'
