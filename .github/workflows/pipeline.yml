@@ -20,17 +20,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Log in to Docker Hub using the secrets
+      # 2. Extract metadata (tags and labels) for Docker
+      # This action creates smart tags based on the Git event.
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
+
+      # 3. Log in to Docker Hub using the secrets
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3. Build and push the Docker image
+      # 4. Build and push the Docker image using the metadata from the previous step
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
-          # Tags the image with the Git tag (e.g., your-username/your-repo:v1.0.0)
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ github.ref_name }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
