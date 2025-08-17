@@ -1,47 +1,48 @@
+# Serpent Surge - Browser-Based Snake Game
 
-# Serpent Surge - The browser based Snake game
+This is a browser-based game inspired by the classic Snake game that you probably played on your old Nokia phone.
 
-This is a browser based game what is about the old Snake game, what you probably played on your old Nokia.
+The game runs on AWS infrastructure, which you can build using this repository. I will walk you through the setup process.
 
-This game is using an AWS infrustructure, what you can build with this repository. I will walk through in the building process.
+**Note:** This guide does not cover every small detail required to deploy the game. It only provides a high-level overview.
 
-**This guide does not show all the little things that go into deploy the game, it only gives a superficial overview!**
+**Follow this guide at your own risk!**
 
-**Follow my guide at your own risk!**
+---
 
+## Technologies Used
 
+- Ansible
+- Docker
+- Terraform
 
+## The Game
 
-## What techonologies are this game using?
+![App Screenshot](https://github.com/Sanya0321/serpent-surge-ssd/blob/1c10b41f62373d2a7a280cd306214c787f275e94/img/Screenshot%20from%202025-08-17%2015-07-23.png)
 
- - Ansible
- - Docker
- - Terraform
-
-
-## The game
-
-<img width="853" alt="game" src="https://github.com/Sanya0321/serpent-surge-ssd/blob/1c10b41f62373d2a7a280cd306214c787f275e94/img/Screenshot%20from%202025-08-17%2015-07-23.png">
-
+---
 
 ## Preparation
 
-**Check all the configs what the repository has, because some parts can be different then what you needs!** 
+**Check all the configuration files in this repository, because some parts may need to be adjusted for your environment!**
 
-Firstly if you use Linux, you need to pull the repository where you want. Open the terminal and copy this in:
+If you are using Linux, clone the repository where you want by running:
 
 ```bash
-  git pull https://github.com/Sanya0321/serpent-surge-ssd.git
+git pull https://github.com/Sanya0321/serpent-surge-ssd.git
 ```
 
-If you are using Windows or MacOS, just download as a zip, what you can find in green "Code" icon, and then at the bottom you will find a button which says "Download ZIP".
+If you are using Windows or macOS, download the repository as a ZIP file. Click the green **"Code"** button, then select **"Download ZIP"**.
 
-## AWS setup
+---
 
-You need to sign up to AWS if you don't have an account. This will be cost 1$ what you got back after approximately 1 months. If you have done this, you need to create an IAM user what is will be for Terraform. This requires several policies, what I give for you. There is it:
+## AWS Setup
 
-```bash
-  {
+1. Sign up for an AWS account if you don’t already have one. The signup process costs **$1**, which will be refunded after about one month.  
+2. Create an **IAM user** for Terraform. This user requires several policies, which are provided below:
+
+```json
+ {
 	"Version": "2012-10-17",
 	"Statement": [
 		{
@@ -169,72 +170,90 @@ You need to sign up to AWS if you don't have an account. This will be cost 1$ wh
 	]
 }
 ```
-Then when you created, you need to create an access key, to be able to use AWS cli. To do that, you need to click on your newly created user and then you need to choose **"Security credentials"**, then if you scroll down a little you will find an **"Access keys"** named field where you need to click on  **"Create access key"**, then you need to choose the first one what is **"Command Line Interface (CLI)"**, then you need to tick confirmation, what you find the bottom of the field. After that you need to click on "Next" (the naming part doesn't effect the setup, so that's not really important). After you go through, you will see your access key with your secret access key. **These are really important for the AWS cli, so save it to yourself!**
 
-When you have done this, you need to install AWS cli to your computer. On Linux you need to use ```sudo snap install aws-cli --classic``` on Windows, you need to download this: https://awscli.amazonaws.com/AWSCLIV2.msi and then install it. You need to also do this on MacOS, https://awscli.amazonaws.com/AWSCLIV2.pkg  these setups are walk you through the installation processes. When you installed it whenever what OS are you using, you need to type to the terminal or the PowerShell this: ```aws configure```
-this will requires your access key, your secret access key, region what you use (like us-east-1) and the file format (use json).
-You can check what you did with: ```
-                              aws sts get-caller-identity
-                                           ```                        
+3. After creating the user, generate an **access key** for CLI usage:  
+   - Go to **Security credentials**.  
+   - Scroll down to **Access keys**.  
+   - Click **Create access key**.  
+   - Choose **Command Line Interface (CLI)**.  
+   - Confirm and continue.  
+   - Save both the **Access Key ID** and **Secret Access Key**.  
 
-## Terraform installation
+4. Install AWS CLI:  
+   - On Linux:  
+     ```bash
+     sudo snap install aws-cli --classic
+     ```  
+   - On Windows: [Download here](https://awscli.amazonaws.com/AWSCLIV2.msi)  
+   - On macOS: [Download here](https://awscli.amazonaws.com/AWSCLIV2.pkg)  
 
-You need to download Terraform to your local computer, what can be different based on the os what you use (this can helps you: https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
+5. Configure AWS CLI:  
+   ```bash
+   aws configure
+   ```  
+   Provide your **Access Key**, **Secret Key**, **Region** (e.g., `us-east-1`), and set the output format to **JSON**.
 
-## Building infrastructure with Terraform
+6. Verify setup:  
+   ```bash
+   aws sts get-caller-identity
+   ```
 
-If you are using Linux (if you are not, you need to unzip it first), you just need to navigate to your folder where you download the repository and then you need to go in "terraform" folder then you need to type this to your terminal or PowerShell:
+---
 
-```bash
-  terraform init
-```
+## Terraform Installation
 
-This initialize your Terraform.
+Download and install Terraform on your local machine. The installation method depends on your operating system. Follow this guide: [Terraform Installation](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
 
-**You need to create an SSH pem file what your EC2 will be using!** This is really important, because if you don't do it, you will be have no access outside the AWS control panel. You can do this in different ways. This is a very useful guide for this: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html
+---
 
-You can check what will Terraform done when you apply the things what the configs has: 
-```
-terraform plan --auto-apply
-```
-This shows everything what Terraform will do. **"--auto-apply"** is not required, it just skip a question part of the running process.
+## Building Infrastructure with Terraform
 
-If the config is right for, you can run it with:
-```
-terraform apply --auto-approve
-```
+1. Navigate to the repository folder and enter the `terraform` directory.  
+2. Initialize Terraform:  
+   ```bash
+   terraform init
+   ```  
+3. **Create an SSH key pair** (.pem file) for EC2 access. Without this, you will only have access from the AWS control panel. Guide: [Create key pairs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html).  
+4. Preview changes:  
+   ```bash
+   terraform plan
+   ```  
+5. Apply changes:  
+   ```bash
+   terraform apply --auto-approve
+   ```
 
-## Ansible setup and usage
+---
 
-Ansible is copy all the required files to EC2 and set it up all the things properly, like Docker, database, database backup script and so on.
+## Ansible Setup and Usage
 
-**In inventory.ini file what is in the Ansible directory, you need to change the IP address and the pem file to your EC2 public IP address and you pem file!**
+Ansible copies all required files to your EC2 instance and sets up everything (Docker, database, backup scripts, etc.).
 
-**Then check all the configurations what my Ansible playbook has, because it can be different what you need!** If you are lazy and you are using Linux, and don't want to browse all the folders, where you find what, you can use tree for it. It shows every file what you have in the subfolders too! You can install with:
+- In the `inventory.ini` file inside the `ansible` directory, update the **IP address** and **.pem file path** with your EC2 details.  
+- Review all playbook configurations, as you may need to adapt them to your needs.  
+- If you’re on Linux, you can use the `tree` command to quickly see the repository structure:  
 
-On Debian based Linux:
-```
-sudo apt install tree -y
-```
-On RHEL based Linux:
-```
-sudo yum install tree -y
-```
+  - On Debian/Ubuntu:  
+    ```bash
+    sudo apt install tree -y
+    ```  
+  - On RHEL/CentOS:  
+    ```bash
+    sudo yum install tree -y
+    ```  
 
-If everything is all right, you can run it with:
+- Run Ansible:  
+  ```bash
+  ansible-playbook -i inventory.ini main.yml
+  ```
 
-```
-ansible-playbook -i inventory.ini main.yml
-```
+If you map your EC2 IP to a domain name in your `hosts` file, you can access the game via your custom domain.
 
-This will do everything what is required for the game. If you are add your EC2 IP to your machine with your domain name on Linux and on MacOS in ```/etc/hosts``` file, or on Windows in ```C:\Windows\System32\drivers\etc\hosts``` you can play with your game! 
- 
-**CONGRATULATIONS!!!**
+- On Linux/macOS: `/etc/hosts`  
+- On Windows: `C:\Windows\System32\drivers\etc\hosts`  
 
-You have now a fully properly working secure browser based game with a full AWS infrastructure!
+---
 
+## Congratulations!
 
-
-
-
-    
+You now have a fully working, secure, browser-based Snake game running on AWS infrastructure!
