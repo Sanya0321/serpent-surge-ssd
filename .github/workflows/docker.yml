@@ -1,3 +1,4 @@
+# This workflow name will appear in the Actions tab
 name: Docker Multi-Service CI/CD
 
 on:
@@ -9,23 +10,32 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
-    outputs:
-      tags: ${{ steps.meta.outputs.tags }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract Docker metadata
-        id: meta
+      - name: Extract Frontend Docker metadata
+        id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-frontend
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-backend
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-frontend
           tags: |
+            # This creates a tag based on the git tag, e.g., v1.2.3
             type=ref,event=tag
           flavor: |
+            # This disables the 'latest' tag
+            latest=false
+
+      - name: Extract Backend Docker metadata
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-backend
+          tags: |
+            # This creates a tag based on the git tag, e.g., v1.2.3
+            type=ref,event=tag
+          flavor: |
+            # This disables the 'latest' tag
             latest=false
           
       - name: Log in to Docker Hub
@@ -40,9 +50,8 @@ jobs:
           context: ./Docker
           file: ./Docker/Dockerfile.frontend
           push: true
-      
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
 
       - name: Build and push Backend image
         uses: docker/build-push-action@v5
@@ -50,9 +59,8 @@ jobs:
           context: ./Docker
           file: ./Docker/Dockerfile.backend
           push: true
-      
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -66,12 +74,17 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
+            # Set the image tag from the Git tag
             export IMAGE_TAG=${{ github.ref_name }}
-          
-            cd /opt/serpent-surge  
+            
+            # Navigate to the app directory where your docker-compose.yml is
+            cd /path/to/your/app
 
+            # Pull the specific image tags from Docker Hub
             docker-compose pull
 
+            # Stop and remove the old containers
             docker-compose down
-            
+
+            # Start the services with the new versioned images
             docker-compose up -d
