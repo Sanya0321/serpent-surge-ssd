@@ -80,8 +80,8 @@ jobs:
             
             cd /opt/serpent-surge
 
-            docker-compose pull
+            sudo docker-compose pull
             
-            docker-compose down
+            sudo docker-compose down
             
             docker-compose up -d
