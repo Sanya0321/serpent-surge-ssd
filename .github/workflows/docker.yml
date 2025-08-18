@@ -1,4 +1,3 @@
-# This workflow name will appear in the Actions tab
 name: Docker Multi-Service CI/CD
 
 on:
@@ -10,7 +9,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    # This output makes the generated tag available to other jobs
     outputs:
       version: ${{ steps.meta-frontend.outputs.version }}
     steps:
@@ -67,7 +65,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push # This job depends on the build-and-push job
+    needs: build-and-push
     name: Deploy to EC2
     steps:
       - name: Deploy to EC2 instance
@@ -77,17 +75,13 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
-            # Use the version tag passed from the build job
+     
             export IMAGE_TAG=${{ needs.build-and-push.outputs.version }}
             
-            # Navigate to the app directory where your docker-compose.yml is
-            cd /path/to/your/app
+            cd /opt/serpent-surge
 
-            # Pull the specific image tags from Docker Hub
             docker-compose pull
-
-            # Stop and remove the old containers
+            
             docker-compose down
-
-            # Start the services with the new versioned images
+            
             docker-compose up -d
