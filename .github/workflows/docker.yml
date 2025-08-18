@@ -68,7 +68,7 @@ jobs:
           script: |
             export IMAGE_TAG=${{ github.ref_name }}
           
-            cd /path/to/your/app
+            cd /opt/serpent-surge  
 
             docker-compose pull
 
