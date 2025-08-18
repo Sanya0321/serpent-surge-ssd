@@ -1,3 +1,0 @@
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/dbbackup serpent_surge_db score

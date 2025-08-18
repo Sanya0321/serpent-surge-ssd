@@ -1,0 +1,40 @@
+---
+- name: Ensure the backup directory exists
+  ansible.builtin.file:
+    path: /var/backups/db-backup
+    state: directory
+    mode: '0755'
+
+- name: Copy the backup script to the server
+  ansible.builtin.copy:
+    src: dbbackup
+    dest: /usr/local/sbin/dbbackup
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Copy the systemd service file
+  ansible.builtin.copy:
+    src: db-backup.service
+    dest: /etc/systemd/system/db-backup.service
+    mode: '0644'
+
+- name: Copy the systemd timer file
+  ansible.builtin.copy:
+    src: db-backup.timer
+    dest: /etc/systemd/system/db-backup.timer
+    mode: '0644'
+
+- name: Reload the systemd daemon to load new units
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable the systemd timer
+  ansible.builtin.systemd:
+    name: db-backup.timer
+    enabled: yes
+
+- name: Start the systemd timer
+  ansible.builtin.systemd:
+    name: db-backup.timer
+    state: started

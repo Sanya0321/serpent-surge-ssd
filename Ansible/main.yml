@@ -1,0 +1,10 @@
+---
+- name: Deploy Serpent Surge Application
+  hosts: webservers
+  become: yes
+
+  roles:
+    - role: install
+    - role: app-deploy
+    - role: database
+    - role: backup

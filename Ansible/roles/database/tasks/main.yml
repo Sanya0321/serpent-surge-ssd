@@ -1,0 +1,46 @@
+---
+- name: Install Python PIP on the remote host
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+    update_cache: yes
+
+- name: Install Python MySQL client using apt
+  ansible.builtin.apt:
+    name: python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Ensure the application database exists on the RDS instance
+  community.mysql.mysql_db:
+    login_host: "yourendpoint"
+    login_user: "admin"
+    login_password: "Strongpassword"
+    name: "serpent_surge_db"
+    state: present
+
+- name: Create the application user with least privilege (POLP)
+  community.mysql.mysql_user:
+    login_host: "yourendpoint"
+    login_user: "admin"
+    login_password: "Strongpassword"
+    name: "serpent_user"
+    password: "Strongpassword"
+    host: '%'
+    priv: "serpent_surge_db.*:SELECT,INSERT,UPDATE,DELETE"
+    state: present
+
+- name: Create the scores table in the application database
+  community.mysql.mysql_query:
+    login_host: "yourendpoint"
+    login_user: "admin"
+    login_password: "Strongpassword"
+    login_db: "serpent_surge_db"
+    query: |
+      CREATE TABLE IF NOT EXISTS scores (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        score INT NOT NULL,
+        difficulty INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );

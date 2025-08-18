@@ -1,0 +1,45 @@
+---
+- name: Example clone of a single branch
+  ansible.builtin.git:
+    repo: https://github.com/Sanya0321/Serpent-files.git
+    dest: /tmp/checkout
+    single_branch: yes
+    version: main
+
+- name: Create the backend and frontend subdirectories
+  ansible.builtin.file:
+    path: "/opt/serpent-surge/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - backend
+    - frontend
+
+- name: Copy frontend files from the temporary clone to the correct location
+  ansible.builtin.copy:
+    src: "/tmp/checkout/"
+    dest: /opt/serpent-surge/frontend/
+    remote_src: yes
+
+- name: Config
+  ansible.builtin.blockinfile:
+    path: /opt/serpent-surge/.env
+    create: yes
+    block: |
+      # Replace these placeholder values with your actual RDS credentials
+      MYSQL_HOST=project-serpent-surge.ccr686q44lot.us-east-1.rds.amazonaws.com
+      MYSQL_USER=admin
+      MYSQL_PASSWORD=Strongpassword
+      MYSQL_DATABASE=serpent_surge_db
+
+- name: Create Nginx configuration from template
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /opt/serpent-surge/nginx.conf
+    mode: '0644'
+
+- name: Create Docker Compose file from template
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/serpent-surge/docker-compose.yml
+    mode: '0644'

@@ -1,0 +1,48 @@
+---
+- name: Ensure project directory exists
+  ansible.builtin.file:
+    path: /opt/serpent-surge
+    state: directory
+    mode: '0755'
+
+- name: Clone game repository
+  ansible.builtin.git:
+    repo: "https://github.com/Sanya0321/Serpent-files.git"
+    dest: /opt/serpent-surge/game
+    version: main
+    force: true
+
+- name: Copy Dockerfiles and Node.js backend files from local files directory
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /opt/serpent-surge/{{ item }}
+    mode: '0644'
+  loop:
+    - Dockerfile.frontend
+    - Dockerfile.backend
+    - package.json
+    - index.js
+    
+- name: Deploy configuration files from local templates
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: /opt/serpent-surge/{{ item }}
+    mode: '0644'
+  loop:
+    - docker-compose.yml
+    - nginx.conf
+  notify: Restart containers
+
+- name: Create .env file from template
+  ansible.builtin.template:
+    src: ".env.j2"
+    dest: /opt/serpent-surge/.env
+    mode: '0600'
+  notify: Restart containers
+  
+- name: Launch the application stack with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/serpent-surge
+    state: present
+    build: always
+    pull: policy

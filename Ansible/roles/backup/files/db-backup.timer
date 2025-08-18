@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer to trigger the RDS DB Backup Service
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target

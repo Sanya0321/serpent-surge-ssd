@@ -1,0 +1,64 @@
+# main.yml
+---
+- name: Ensure project directory exists
+  ansible.builtin.file:
+    path: /opt/serpent-surge
+    state: directory
+    mode: '0755'
+
+- name: Clone game repository
+  ansible.builtin.git:
+    repo: "https://github.com/Sanya0321/Serpent-files.git"
+    dest: /opt/serpent-surge/game
+    version: main
+    force: true
+
+- name: Copy application and Docker files
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/opt/serpent-surge/{{ item }}"
+    mode: '0644'
+  loop:
+    - Dockerfile.frontend
+    - Dockerfile.backend
+    - package.json
+    - index.js
+
+# --- START: New tasks for SSL ---
+- name: Create SSL directory for private key
+  ansible.builtin.file:
+    path: /etc/ssl/private
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Copy SSL certificate and private key
+  ansible.builtin.copy:
+    src: "files/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: 'fullchain.pem', dest: '/etc/ssl/certs/fullchain.pem', mode: '0644' }
+    - { src: 'privkey.pem', dest: '/etc/ssl/private/privkey.pem', mode: '0600' }
+# --- END: New tasks for SSL ---
+
+- name: Deploy configuration files from templates
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/opt/serpent-surge/{{ item }}"
+    mode: '0644'
+  loop:
+    - docker-compose.yml
+    - nginx.conf
+    - .env
+  notify: Restart containers
+ 
+- name: Launch the application stack with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/serpent-surge
+    state: present
+    build: always
+    pull: policy

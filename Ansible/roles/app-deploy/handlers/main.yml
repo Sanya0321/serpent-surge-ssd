@@ -1,0 +1,6 @@
+---
+- name: Restart containers
+  ansible.builtin.shell: |
+    docker compose -f /opt/serpent-surge/docker-compose.yml up -d
+  args:
+    chdir: /opt/serpent-surge

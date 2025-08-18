@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# --- Configuration ---
+RDS_HOSTNAME="yourendpoint"
+DB_USER="serpent_user"
+DB_PASSWORD="Strongpassword"
+DB_NAME="serpent_surge_db"
+TABLE_NAME="scores"
+LOG_FILE="/var/log/rds-db-backup.log"
+
+# Set your S3 bucket name here
+S3_BUCKET="final-project-bucket-unique-name"
+
+# --- Script Logic ---
+log() {
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | sudo tee -a "$LOG_FILE"
+}
+
+log "Starting S3 backup for table $TABLE_NAME in $DB_NAME."
+
+# Create a timestamped filename for the compressed dump
+DUMP_FILENAME="${TABLE_NAME}-$(date +%F).sql.gz"
+TMP_DUMP_PATH="/tmp/${DUMP_FILENAME}"
+
+# Dump the database table and compress it on the fly with gzip
+# The output is redirected to our temporary file
+sudo mysqldump --single-transaction --set-gtid-purged=OFF -h "$RDS_HOSTNAME" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" "$TABLE_NAME" | gzip > "$TMP_DUMP_PATH"
+
+# Check if the mysqldump command was successful
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  log "ERROR: mysqldump failed. Check credentials and RDS connectivity."
+  # Clean up the failed (and likely empty) temp file
+  sudo rm -f "$TMP_DUMP_PATH"
+  exit 1
+fi
+log "Database dump created successfully: $TMP_DUMP_PATH"
+
+# Upload the compressed dump file to S3
+aws s3 cp "$TMP_DUMP_PATH" "s3://${S3_BUCKET}/db-backups/${DUMP_FILENAME}"
+
+# Check if the upload was successful
+if [[ $? -ne 0 ]]; then
+  log "ERROR: AWS S3 upload failed. Check IAM permissions and bucket name."
+  sudo rm -f "$TMP_DUMP_PATH"
+  exit 1
+fi
+log "Successfully uploaded backup to s3://${S3_BUCKET}/db-backups/${DUMP_FILENAME}"
+
+# Clean up the local temporary file
+sudo rm -f "$TMP_DUMP_PATH"
+log "Local temporary file removed."
+
+log "DONE!"

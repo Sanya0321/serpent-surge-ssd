@@ -1,0 +1,56 @@
+# nginx.conf
+worker_processes 1;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    sendfile      on;
+    keepalive_timeout  65;
+
+    # Server block to redirect all HTTP traffic to HTTPS
+    server {
+        listen 80;
+        server_name serpentsurgessd.hu;
+        return 301 https://$host$request_uri;
+    }
+
+    # Server block for HTTPS traffic
+    server {
+        listen 443 ssl http2;
+        server_name serpentsurgessd.hu;
+
+        # SSL Certificate configuration
+        ssl_certificate /etc/nginx/ssl/fullchain.pem;
+        ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+
+        # Recommended SSL settings
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
+        ssl_prefer_server_ciphers on;
+
+        # Root for the frontend application
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html;
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Proxy passes for the backend API
+        location /save-score {
+         proxy_pass http://backend:3000/save-score;
+         add_header Access-Control-Allow-Origin *;
+         add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+         add_header Access-Control-Allow-Headers "*";
+        }
+        location /top-scores {
+         proxy_pass http://backend:3000/top-scores;
+         add_header Access-Control-Allow-Origin *;
+         add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+         add_header Access-Control-Allow-Headers "*";
+        }
+    }
+}

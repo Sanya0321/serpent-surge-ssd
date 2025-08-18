@@ -1,0 +1,8 @@
+[Unit]
+Description=RDS Database Backup Service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/dbbackup
+User=root
+Group=root
