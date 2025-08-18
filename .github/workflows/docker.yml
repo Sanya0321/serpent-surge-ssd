@@ -3,7 +3,7 @@ name: Docker Multi-Service CI
 
 on:
   push:
-    # Run only when a new tag is pushed
+
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -12,49 +12,44 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout repository
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup metadata for the Frontend image
+
       - name: Extract Frontend Docker metadata
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          # Creates an image name like 'your-username/your-repo-frontend'
+
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-frontend
 
-      # 3. Setup metadata for the Backend image
       - name: Extract Backend Docker metadata
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
-          # Creates an image name like 'your-username/your-repo-backend'
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-backend
-
-      # 4. Log in to Docker Hub
+          
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 5. Build and push the Frontend image 🏗️
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile.frontend
+          context: ./Docker
+          file: ./Docker/Dockerfile.frontend
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
 
-      # 6. Build and push the Backend image 🏗️
       - name: Build and push Backend image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile.backend
+          context: ./Docker
+          file: ./Docker/Dockerfile.backend
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
