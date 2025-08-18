@@ -10,6 +10,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    # This output makes the generated tag available to other jobs
+    outputs:
+      version: ${{ steps.meta-frontend.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,10 +23,11 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-frontend
           tags: |
-            # This creates a tag based on the git tag, e.g., v1.2.3
+            # Tag with the git tag on a tag push, e.g., v1.2.3
             type=ref,event=tag
+            # Tag with the short commit SHA as a fallback for other events
+            type=sha,prefix=,format=short
           flavor: |
-            # This disables the 'latest' tag
             latest=false
 
       - name: Extract Backend Docker metadata
@@ -32,10 +36,9 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-backend
           tags: |
-            # This creates a tag based on the git tag, e.g., v1.2.3
             type=ref,event=tag
+            type=sha,prefix=,format=short
           flavor: |
-            # This disables the 'latest' tag
             latest=false
           
       - name: Log in to Docker Hub
@@ -64,7 +67,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: build-and-push # This job depends on the build-and-push job
     name: Deploy to EC2
     steps:
       - name: Deploy to EC2 instance
@@ -74,8 +77,8 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
-            # Set the image tag from the Git tag
-            export IMAGE_TAG=${{ github.ref_name }}
+            # Use the version tag passed from the build job
+            export IMAGE_TAG=${{ needs.build-and-push.outputs.version }}
             
             # Navigate to the app directory where your docker-compose.yml is
             cd /path/to/your/app
