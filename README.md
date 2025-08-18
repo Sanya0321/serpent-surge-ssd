@@ -233,6 +233,11 @@ First, you need a domain name to run the Ansible setup without errors. You can g
 
 Ansible copies all required files to your EC2 instance and sets up everything (Docker, database, backup scripts, etc.).
 
+First, you need to install Ansible on your local machine! There is a guide for it: [Ansible installation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+
+Second, you need to create a pem file on AWS! There is a guide for it: [AWS pem file creation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html)
+
+
 - In the `inventory.ini` file inside the `ansible` directory, update the **IP address** and **.pem file path** with your EC2 details.  
 - Review all playbook configurations, as you may need to adapt them to your needs.  
 - If you’re on Linux, you can use the `tree` command to quickly see the repository structure:  
