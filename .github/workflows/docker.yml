@@ -1,47 +1,60 @@
 # This workflow name will appear in the Actions tab
-name: Docker Image CI
+name: Docker Multi-Service CI
 
-# Controls when the workflow will run
 on:
-  # This section has been corrected
   push:
-    # Run only when a new tag is pushed (e.g., v1.0.0, v1.2.3)
+    # Run only when a new tag is pushed
     tags:
       - 'v*.*.*'
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build-and-push:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # 1. Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Extract metadata (tags and labels) for Docker
-      # This action creates smart tags based on the Git event.
-      - name: Extract Docker metadata
-        id: meta
+      # 2. Setup metadata for the Frontend image
+      - name: Extract Frontend Docker metadata
+        id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
+          # Creates an image name like 'your-username/your-repo-frontend'
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-frontend
 
-      # 3. Log in to Docker Hub using the secrets
+      # 3. Setup metadata for the Backend image
+      - name: Extract Backend Docker metadata
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          # Creates an image name like 'your-username/your-repo-backend'
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-backend
+
+      # 4. Log in to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 4. Build and push the Docker image using the metadata from the previous step
-      - name: Build and push Docker image
+      # 5. Build and push the Frontend image 🏗️
+      - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
-          context: ./Docker
+          context: .
+          file: ./Dockerfile.frontend
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+
+      # 6. Build and push the Backend image 🏗️
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
