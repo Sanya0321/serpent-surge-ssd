@@ -225,6 +225,10 @@ Download and install Terraform on your local machine. The installation method de
 
 ---
 
+## SSL creation
+
+First, you need a domain name to run the Ansible setup without errors. You can get a free one by registering at [nic](https://nic.ua/). This may require a credit card for a nominal verification fee. After that, you need to add two A records in your domain's dashboard: one for the root domain (without ```www.```) and one with ```www.```. Both records must point to your EC2 instance's public IP address. **Disclaimer! If you stop your EC2 instance, the public IP address will change when you start again, and your domain will no longer work!** After that, you need to follow this tutorial: [Create a Certificate Using Certbot and Docker](https://www.willianantunes.com/blog/2022/08/create-a-certificate-using-certbot-through-docker/)! When you are done, place the generated certificate files into the roles/app-deployment/files directory in your Ansible playbook.
+
 ## Ansible Setup and Usage
 
 Ansible copies all required files to your EC2 instance and sets up everything (Docker, database, backup scripts, etc.).
