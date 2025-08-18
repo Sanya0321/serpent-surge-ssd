@@ -1,9 +1,7 @@
-# This workflow name will appear in the Actions tab
-name: Docker Multi-Service CI
+name: Docker Multi-Service CI/CD
 
 on:
   push:
-
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -11,24 +9,24 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    steps:
 
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
-      - name: Extract Frontend Docker metadata
-        id: meta-frontend
+      - name: Extract Docker metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
-
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-frontend
-
-      - name: Extract Backend Docker metadata
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-backend
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-frontend
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}-backend
+          tags: |
+            type=ref,event=tag
+          flavor: |
+            latest=false
           
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -42,8 +40,9 @@ jobs:
           context: ./Docker
           file: ./Docker/Dockerfile.frontend
           push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
+      
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build and push Backend image
         uses: docker/build-push-action@v5
@@ -51,5 +50,28 @@ jobs:
           context: ./Docker
           file: ./Docker/Dockerfile.backend
           push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
+      
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    name: Deploy to EC2
+    steps:
+      - name: Deploy to EC2 instance
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            export IMAGE_TAG=${{ github.ref_name }}
+          
+            cd /path/to/your/app
+
+            docker-compose pull
+
+            docker-compose down
+            
+            docker-compose up -d
