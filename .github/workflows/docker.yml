@@ -5,9 +5,9 @@ name: Docker Image CI
 on:
   push:
   workflow_dispatch:
-    # Run only when a new tag is pushed (e.g., v1.0.0, v1.2.3)
-    tags:
-      - 'v*.*.*'
+  # Run only when a new tag is pushed (e.g., v1.0.0, v1.2.3)
+  tags:
+    - 'v*.*.*'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -40,7 +40,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          # This is the line that was changed
+          context: ./Docker 
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
