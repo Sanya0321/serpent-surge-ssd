@@ -1,33 +1,28 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: sanya0321/serpent-surge-ssd-backend:${IMAGE_TAG:-latest}
     container_name: serpent_backend
     env_file:
       - .env
     restart: unless-stopped
+    ports:
+      - "5000:5000"
     networks:
       - private
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
     container_name: serpent_frontend
+    image: sanya0321/serpent-surge-ssd-frontend:${IMAGE_TAG:-latest}
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./game:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      # --- START: New volumes for SSL certificates ---
       - /etc/ssl/certs/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
       - /etc/ssl/private/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
-      # --- END: New volumes for SSL certificates ---
     environment:
       - BACKEND_URL=https://serpentsurgessd.hu/
     depends_on:
@@ -36,7 +31,6 @@ services:
       - private
       - public
 
-# Add network definitions if they are not already in your file
 networks:
   private:
   public:
