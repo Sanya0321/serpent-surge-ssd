@@ -255,12 +255,6 @@ Second, you need to create a pem file on AWS! There is a guide for it: [AWS pem 
   ```bash
   ansible-playbook -i inventory.ini main.yml
   ```
-
-If you map your EC2 IP to a domain name in your `hosts` file, you can access the game via your custom domain.
-
-- On Linux/macOS: `/etc/hosts`  
-- On Windows: `C:\Windows\System32\drivers\etc\hosts`  
-
 ---
 
 ## Congratulations!
