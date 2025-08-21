@@ -10,7 +10,7 @@ The game runs on AWS infrastructure, which you can build using this repository. 
 
 ---
 
-## Technologies Used
+## Technologies what this using
 
 - Ansible
 - Docker
